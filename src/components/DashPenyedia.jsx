@@ -256,7 +256,7 @@ export default function DashPenyedia() {
             onClick={() => setIsEdit(false)}
           >
             <div className="text-center" onClick={(e) => e.stopPropagation()}>
-              <div className="bg-white w-[25vw] h-[65vh] rounded-2xl p-5">
+              <div className="bg-white w-[25vw] h-[65vh] rounded-2xl p-5 text-black">
                 <h1 className="text-xl font-bold text-black">Edit Paket</h1>
                 <div className="flex mt-1 bg-indigo-700 w-[22vw] h-[5px] rounded-2xl"></div>
                 <form className="flex flex-col flex-wrap">
