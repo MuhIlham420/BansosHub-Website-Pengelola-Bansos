@@ -1,0 +1,38 @@
+const jwt = require('jsonwebtoken');
+
+// Middleware: cek token login
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ message: 'Token tidak ditemukan' });
+
+  jwt.verify(token, 'SECRETKEY', (err, user) => {
+    if (err) return res.status(403).json({ message: 'Token tidak valid' });
+    req.user = user;
+    next();
+  });
+}
+
+// Middleware: hanya penyedia
+function penyediaOnly(req, res, next) {
+  if (req.user.role !== 'penyedia') {
+    return res.status(403).json({ message: 'Akses hanya untuk penyedia' });
+  }
+  next();
+}
+
+// Middleware: hanya penerima
+function penerimaOnly(req, res, next) {
+  if (req.user.role !== 'penerima') {
+    return res.status(403).json({ message: 'Akses hanya untuk penerima' });
+  }
+  next();
+}
+
+// Export semua fungsi
+module.exports = {
+  verifyToken,
+  penyediaOnly,
+  penerimaOnly
+};
