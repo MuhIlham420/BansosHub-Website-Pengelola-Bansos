@@ -118,7 +118,7 @@ exports.loginPenerima = async (req, res) => {
                 return res.status(401).json({ status: 'error', message: 'Password salah' });
             }
 
-            const token = jwt.sign({ id: user.id, role: 'penerima' }, 'RAHASIA_KEY', { expiresIn: '1d' });
+            const token = jwt.sign({ id_warga: user.id_penerima, role: 'penerima' }, 'RAHASIA_KEY', { expiresIn: '1d' });
 
             res.status(200).json({
                 status: 'success',

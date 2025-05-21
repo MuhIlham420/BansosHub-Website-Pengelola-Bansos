@@ -7,7 +7,7 @@ function verifyToken(req, res, next) {
 
   if (!token) return res.status(401).json({ message: 'Token tidak ditemukan' });
 
-  jwt.verify(token, 'SECRETKEY', (err, user) => {
+  jwt.verify(token, 'RAHASIA_KEY', (err, user) => {
     if (err) return res.status(403).json({ message: 'Token tidak valid' });
     req.user = user;
     next();
