@@ -12,6 +12,7 @@ import {
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPenerima, setIsPenerima] = useState(null);
+  const [loginFailed, setLoginFailed] = useState(false);
 
   const navigate = useNavigate();
 
@@ -29,10 +30,13 @@ export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (isPenerima) {
-      navigate("/dashboard_penerima");
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+
+    if (username === "admin" && password === "1234") {
+      navigate(isPenerima ? "/dashboard_penerima" : "/dashboard_penyedia");
     } else {
-      navigate("/dashboard_penyedia");
+      setLoginFailed(true);
     }
   };
 
@@ -51,24 +55,15 @@ export default function Login() {
               {isPenerima ? "Penerima" : "Penyedia"}
             </span>
           </div>
-          <div>
-            <FontAwesomeIcon
-              icon={faGoogle}
-              className="mr-5 border-2 border-gray-200 p-2 rounded-full hover:scale-120 transition-scale duration-300 ease-in-out"
-            />
-            <FontAwesomeIcon
-              icon={faFacebook}
-              size
-              className="mr-5 border-2 border-gray-200 p-2 rounded-full hover:scale-120 transition-scale duration-300 ease-in-out"
-            />
-            <FontAwesomeIcon
-              icon={faTwitter}
-              className=" border-2 border-gray-200 p-2 rounded-full hover:scale-120 transition-scale duration-300 ease-in-out"
-            />
-          </div>
+
           <div className="mt-5 text-sm">
             Atau{" "}
-            <a className="text-indigo-300 hover:text-indigo-500" onClick={isPenerima ? ()=>handleClick(true) : ()=>handleClick(false)}>
+            <a
+              className="text-indigo-300 hover:text-indigo-500"
+              onClick={
+                isPenerima ? () => handleClick(true) : () => handleClick(false)
+              }
+            >
               <Link to="/register">membuat akun baru</Link>
             </a>
           </div>
@@ -105,6 +100,27 @@ export default function Login() {
             </form>
           </div>
         </div>
+        {loginFailed && (
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50 ${
+              isPenerima ? "translate-x-0" : "-translate-x-[45vw]"
+            }`}
+            onClick={() => setLoginFailed(false)} // klik overlay hilangin overlay
+          >
+            <div className="bg-white rounded-lg p-8 max-w-sm w-full text-center shadow-lg">
+              <h2 className="text-black font-bold text-2xl mb-4">
+                Login Gagal!
+              </h2>
+              <p className="mb-6">Username atau password salah. Coba lagi.</p>
+              <button
+                onClick={() => setLoginFailed(false)}
+                className="bg-indigo-700 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div
         className={` ${

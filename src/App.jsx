@@ -356,9 +356,9 @@ export default function App() {
               data-aos-delay="300"
               className="flex-1 pb-10 mx-5 shadow-xl rounded-2xl hover:scale-105 transition-scale duration-300 ease-in-out"
             >
-              <h1 className="text-4xl text-indigo-700 font-extrabold">100+</h1>
+              <h1 className="text-4xl text-indigo-700 font-extrabold">76+</h1>
               <p className="text-xl font-bold">
-                Paket dibagikan setiap harinya
+                Paket dibagikan setiap bulannya
               </p>
             </div>
             <div
@@ -366,7 +366,7 @@ export default function App() {
               data-aos-delay="300"
               className="flex-1 pb-10 mx-5 shadow-xl rounded-2xl hover:scale-105 transition-scale duration-300 ease-in-out"
             >
-              <h1 className="text-4xl text-indigo-700 font-bold">100k+</h1>
+              <h1 className="text-4xl text-indigo-700 font-bold">214+</h1>
               <p className="text-xl font-bold">Orang mendapatkan bantuan</p>
             </div>
             <div
@@ -374,7 +374,7 @@ export default function App() {
               data-aos-delay="300"
               className="flex-1 pb-10 mx-5 shadow-xl rounded-2xl hover:scale-105 transition-scale duration-300 ease-in-out"
             >
-              <h1 className="text-4xl text-indigo-700 font-bold">1jt+</h1>
+              <h1 className="text-4xl text-indigo-700 font-bold">546+</h1>
               <p className="text-xl font-bold">Paket telah dibagikan</p>
             </div>
           </div>

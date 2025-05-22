@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import logo from "../s.png";
 
-
 export default function Register() {
   const navigate = useNavigate();
 
@@ -20,6 +19,20 @@ export default function Register() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isPenerima, setIsPenerima] = useState(true);
+  const [isRegisterFailed, setRegisterFailed] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+
+    if (username === "admin") {
+      setRegisterFailed(true);
+    } else {
+      navigate("/login");
+    }
+  };
   return (
     <div
       className={`h-[100vh] flex flex-col lg:flex-row hide-scrollbar ${
@@ -37,12 +50,17 @@ export default function Register() {
           </div>
           <div className="mt-5 text-sm">
             Atau{" "}
-            <a className="text-indigo-300 hover:text-indigo-500" onClick={isPenerima ? ()=>handleClick(true) : ()=>handleClick(false)}>
+            <a
+              className="text-indigo-300 hover:text-indigo-500"
+              onClick={
+                isPenerima ? () => handleClick(true) : () => handleClick(false)
+              }
+            >
               <Link to="/login">masuk ke akun yang sudah ada</Link>
             </a>
           </div>
           <div>
-            <form className="flex flex-col m-8">
+            <form className="flex flex-col m-8" onSubmit={handleSubmit}>
               <input
                 type="hidden"
                 name="role"
@@ -58,7 +76,7 @@ export default function Register() {
                 style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.18)" }}
               />
               <input
-                type={showPassword ? "text" : "password"}
+                type="text"
                 name={isPenerima ? "no_kk" : "no_organisasi"}
                 placeholder={isPenerima ? "Nomor KK" : "Nomor Organisasi"}
                 required
@@ -113,11 +131,37 @@ export default function Register() {
                 type="submit"
                 className="mt-7 bg-indigo-700 py-4 rounded-xl text-xl text-white font-bold hover:scale-97 hover:bg-indigo-900 transition-all duration-300 ease-in-out"
               >
-                <Link to="/login">Daftar</Link>
+                Daftar
               </button>
             </form>
           </div>
         </div>
+        {isRegisterFailed && (
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50 ${
+              isPenerima ? "translate-x-0" : "-translate-x-[45vw]"
+            }`}
+            onClick={() => setRegisterFailed(false)}
+          >
+            <div
+              className="bg-white rounded-lg p-8 max-w-sm w-full text-center shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-black font-bold text-2xl mb-4">
+                Registrasi Gagal!
+              </h2>
+              <p className="mb-6">
+                Username telah digunakan, silakan coba username lain.
+              </p>
+              <button
+                onClick={() => setRegisterFailed(false)}
+                className="bg-indigo-700 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div
         className={` ${
