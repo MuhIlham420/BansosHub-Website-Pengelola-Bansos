@@ -89,22 +89,23 @@ exports.registerPenyedia = async (req, res) =>{
     }
 };
 
-exports.loginPenerima = async (req, res) => {
-    const { username, password } = req.body;
+exports.login = async (req, res) => {
+    const { username, password, role } = req.body;
 
     try {
-        if (!username || !password) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Username dan password harus diisi'
-            });
+        if (!username || !password || !role) {
+            return res.status(400).json({ status: 'error', message: 'Semua field harus diisi' });
         }
 
-        const query = 'SELECT * FROM Penerima WHERE username = ? AND no_kk IS NOT NULL';
+        const table = role === 'penerima' ? 'Penerima' : 'Penyedia';
+        const idField = role === 'penerima' ? 'id_penerima' : 'id_penyedia';
+        const extraCheck = role === 'penerima' ? 'no_kk IS NOT NULL' : 'no_organisasi IS NOT NULL';
+
+        const query = `SELECT * FROM ${table} WHERE username = ? AND ${extraCheck}`;
         db.query(query, [username], async (err, results) => {
             if (err) {
-                console.error('Query error:', err);
-                return res.status(500).json({ status: 'error', message: 'Terjadi kesalahan server' });
+                console.error(err);
+                return res.status(500).json({ status: 'error', message: 'Server error' });
             }
 
             if (results.length === 0) {
@@ -117,7 +118,7 @@ exports.loginPenerima = async (req, res) => {
                 return res.status(401).json({ status: 'error', message: 'Password salah' });
             }
 
-            const token = jwt.sign({ id_penerima: user.id_penerima, role: 'penerima' }, 'RAHASIA_KEY', { expiresIn: '1d' });
+            const token = jwt.sign({ [idField]: user[idField], role }, 'RAHASIA_KEY', { expiresIn: '1d' });
 
             res.status(200).json({
                 status: 'success',
@@ -130,59 +131,8 @@ exports.loginPenerima = async (req, res) => {
                 }
             });
         });
-
     } catch (error) {
-        console.error('Error:', error);
+        console.error(error);
         res.status(500).json({ status: 'error', message: 'Terjadi kesalahan server' });
     }
 };
-
-
-exports.loginPenyedia = async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        if (!username || !password) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Username dan password harus diisi'
-            });
-        }
-
-        const query = 'SELECT * FROM Penyedia WHERE username = ? AND no_organisasi IS NOT NULL';
-        db.query(query, [username], async (err, results) => {
-            if (err) {
-                console.error('Query error:', err);
-                return res.status(500).json({ status: 'error', message: 'Terjadi kesalahan server' });
-            }
-
-            if (results.length === 0) {
-                return res.status(401).json({ status: 'error', message: 'User tidak ditemukan' });
-            }
-
-            const user = results[0];
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ status: 'error', message: 'Password salah' });
-            }
-
-            const token = jwt.sign({ id_penyedia: user.id_penyedia, role: 'penyedia' }, 'RAHASIA_KEY', { expiresIn: '1d' });
-
-            res.status(200).json({
-                status: 'success',
-                message: 'Login berhasil',
-                token,
-                data: {
-                    id: user.id,
-                    username: user.username,
-                    nama: user.nama
-                }
-            });
-        });
-
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ status: 'error', message: 'Terjadi kesalahan server' });
-    }
-};
-
