@@ -3,6 +3,7 @@ const app = express();
 
 const authRoutes = require('./routes/authRoutes');           // untuk login / register
 const penerimaRoutes = require('./routes/penerimaRoutes');
+const penyediaRoutes = require('./routes/penyediaRoutes');
 
 // middleware
 app.use(express.json());
@@ -10,6 +11,7 @@ app.use(express.json());
 // route groups
 app.use('/', authRoutes);
 app.use('/penerima', penerimaRoutes);
+app.use('/penyedia', penyediaRoutes);
 
 // start server
 const PORT = 5000;

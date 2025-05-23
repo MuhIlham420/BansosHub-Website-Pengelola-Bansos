@@ -4,7 +4,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'cruddb' // ganti sesuai db
+  database: 'bansos_dummy' // ganti sesuai db
 });
 
 module.exports = db;

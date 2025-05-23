@@ -4,10 +4,10 @@ const jwt = require('jsonwebtoken');
 
 exports.registerPenerima = async (req,res) =>{
 
-    const {nama, no_kk, alamat, penghasilan, no_hp, username, password} = req.body;
+    const {nama_penerima, no_kk, alamat, penghasilan, kontak, username, password} = req.body;
     
     try{
-        if (!nama || !no_kk || !alamat || !penghasilan || !no_hp || !username || !password) {
+        if (!nama_penerima || !no_kk || !alamat || !penghasilan || !kontak || !username || !password) {
             return res.status(400).json({
             status: 'error',
             message: 'Please fill all of the data'
@@ -16,8 +16,8 @@ exports.registerPenerima = async (req,res) =>{
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const query = 'INSERT INTO Penerima (nama, no_kk, alamat, penghasilan, no_hp, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        const values = [nama, no_kk, alamat, penghasilan, no_hp, username, hashedPassword];
+        const query = 'INSERT INTO Penerima (nama_penerima, no_kk, alamat, penghasilan, kontak, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        const values = [nama_penerima, no_kk, alamat, penghasilan, kontak, username, hashedPassword];
 
         db.query(query, values, (err, result) => {
             if (err) {
@@ -48,21 +48,20 @@ exports.registerPenerima = async (req,res) =>{
 
 exports.registerPenyedia = async (req, res) =>{
     
-    const {nama, no_organisasi, alamat, no_hp, username, password} = req.body;
+    const {nama_penyedia, no_organisasi, alamat, kontak, username, password} = req.body;
 
     try{
-        if (!nama || !no_organisasi || !alamat || !no_hp || !username || !password) {
+        if (!nama_penyedia || !no_organisasi || !alamat || !kontak || !username || !password) {
             return res.status(400).json({
                 status: 'error',
                 message: 'Semua data harus diisi'
             });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);  
 
         const query = 'INSERT INTO Penyedia (nama_penyedia, no_organisasi, alamat, kontak, username, password) VALUES (?, ?, ?, ?, ?, ?)';
-        const values = [nama, no_organisasi, alamat, no_hp, username, hashedPassword];
+        const values = [nama_penyedia, no_organisasi, alamat, kontak, username, hashedPassword];
         db.query(query, values, (err, result) => {
             if (err) {
                 console.error('Error creating penyedia:', err);
@@ -118,7 +117,7 @@ exports.loginPenerima = async (req, res) => {
                 return res.status(401).json({ status: 'error', message: 'Password salah' });
             }
 
-            const token = jwt.sign({ id_warga: user.id_penerima, role: 'penerima' }, 'RAHASIA_KEY', { expiresIn: '1d' });
+            const token = jwt.sign({ id_penerima: user.id_penerima, role: 'penerima' }, 'RAHASIA_KEY', { expiresIn: '1d' });
 
             res.status(200).json({
                 status: 'success',
@@ -167,7 +166,7 @@ exports.loginPenyedia = async (req, res) => {
                 return res.status(401).json({ status: 'error', message: 'Password salah' });
             }
 
-            const token = jwt.sign({ id: user.id, role: 'penyedia' }, 'RAHASIA_KEY', { expiresIn: '1d' });
+            const token = jwt.sign({ id_penyedia: user.id_penyedia, role: 'penyedia' }, 'RAHASIA_KEY', { expiresIn: '1d' });
 
             res.status(200).json({
                 status: 'success',

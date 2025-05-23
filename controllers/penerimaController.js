@@ -1,84 +1,95 @@
 const db = require("../config/db");
 
-exports.getDashboardPenerima = (req, res) => {
-  const id_warga = req.user.id_warga; 
-
-  const sql = `
-    SELECT
-      (SELECT COUNT(DISTINCT id_paket) FROM paket_bansos) AS tipe_bansos_tersedia,
-      
-      (SELECT status FROM transaksi_bansos 
-        WHERE id_penerima = ? 
-        ORDER BY tanggal_penyaluran DESC 
-        LIMIT 1) AS status_terakhir,
-
-      (SELECT tanggal_penyaluran FROM transaksi_bansos 
-        WHERE id_penerima = ? 
-        ORDER BY tanggal_penyaluran DESC 
-        LIMIT 1) AS tanggal_terakhir
-  `;
-
-  db.query(sql, [id_warga, id_warga], (err, results) => {
-    if (err) return res.status(500).json({ message: "Gagal ambil data dashboard", error: err });
+exports.getDashboardPenerima = async (req, res) => {
+  try{
+    const id_penerima = req.user.id_penerima; 
+  
+    const sql = `
+      SELECT
+        (SELECT COUNT(DISTINCT id_paket) FROM paket_bansos) AS tipe_bansos_tersedia,
+        
+        (SELECT next_pengambilan FROM transaksi_bansos 
+          WHERE id_penerima = ? 
+          ORDER BY last_pengambilan DESC
+          LIMIT 1) AS tanggal_terakhir
+    `;
+    const [results] = await db.promise().query(sql, [id_penerima]);
 
     const row = results[0];
+    let sisa_hari = null;
 
-    let perkiraan_selanjutnya = null;
     if (row.tanggal_terakhir) {
       const tanggal = new Date(row.tanggal_terakhir);
-      tanggal.setDate(tanggal.getDate() + 30); // +30 hari
-      perkiraan_selanjutnya = tanggal.toISOString().split("T")[0]; // YYYY-MM-DD
+      tanggal.setDate(tanggal.getDate() + 30);
+  
+      const hariIni = new Date();
+      const selisihWaktu = tanggal.getTime() - hariIni.getTime();
+      sisa_hari = Math.ceil(selisihWaktu / (1000 * 3600 * 24)); // konversi ms ke hari
     }
 
     res.json({
       tipe_bansos_tersedia: row.tipe_bansos_tersedia || 0,
-      status_terakhir: row.status_terakhir || "Belum Pernah Menerima",
-      perkiraan_bantuan_selanjutnya: perkiraan_selanjutnya || "Belum Ada"
+      sisa_hari: sisa_hari !== null ? `${sisa_hari} hari lagi` : "Belum Ada"    
     });
-  });
+
+  } catch(err){
+    res.status(500).json({message:"Gagal ambil data dashboard", error:err});
+  } 
 };
 
-exports.getDaftarBansos = (req, res) => {
-  const sql = `
-    SELECT pb.id_paket, pb.nama_paket, pb.max_penghasilan, COUNT(t.id_paket) AS stok
-    FROM paket_bansos pb
-    LEFT JOIN transaksi_bansos t ON pb.id_paket = t.id_paket AND t.status = 'pending'
-    GROUP BY pb.id_paket
-  `;
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: "Gagal mengambil data", error: err });
+exports.getDaftarBansos = async (req, res) => {
+  try{
+    const sql = `
+      SELECT id_paket, nama_paket, max_penghasilan, stok, deskripsi 
+      FROM paket_bansos
+      ORDER BY nama_paket ASC
+    `;
+
+    const [results] = await db.promise().query(sql);
     res.json(results);
-  });
+  }catch(err){
+    res.status(500).json({message:"Gagal mengambil data bansos", error:err});
+  }
 };
 
-exports.requestBansos = (req, res) => {
+
+exports.getRiwayatBansos = async(req, res) => {
+  try{
+    const id_penerima = req.user.id_penerima;
+  
+    const sql = `
+      SELECT t.id_transaksi, t.id_paket, pb.nama_paket, t.last_pengambilan, t.next_pengambilan
+      FROM transaksi_bansos t
+      JOIN paket_bansos pb ON t.id_paket = pb.id_paket
+      WHERE t.id_penerima = ?
+      ORDER BY t.id_transaksi DESC
+    `;
+    const[result] = await db.promise().query(sql, [id_penerima]);
+    res.json(result);
+
+  }catch(err){
+    res.status(500).json({message:"Gagal mengambil riwayat", error:err});
+  }
+};
+
+exports.requestBansos = async(req, res) => {
   const { id_paket } = req.body;
-  const id_warga = req.user.id_warga; // diasumsikan dari middleware auth
+  try{
+    const id_penerima = req.user.id_penerima;
 
-  const sql = `
-    INSERT INTO transaksi_bansos (id_warga, id_paket, tanggal_penyaluran, status)
-    VALUES (?, ?, CURDATE(), 'pending')
-  `;
+    if (!id_paket) {
+      return res.status(400).json({ message: "id_paket tidak boleh kosong" });
+    }
+    
+    const sql = `
+      INSERT INTO transaksi_bansos (id_penerima, id_paket, last_pengambilan, next_pengambilan)
+      VALUES (?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+    `;
+    const[result] = await db.promise().query(sql, [id_penerima, id_paket]);
+    res.json(result);
 
-  db.query(sql, [id_warga, id_paket], (err, result) => {
-    if (err) return res.status(500).json({ message: "Gagal request bansos", error: err });
     res.status(201).json({ message: "Berhasil request bansos" });
-  });
-};
-
-exports.getRiwayatBansos = (req, res) => {
-  const id_warga = req.user.id_warga;
-
-  const sql = `
-    SELECT t.id_transaksi, t.id_paket, pb.nama_paket, t.tanggal_penyaluran, t.status
-    FROM transaksi_bansos t
-    JOIN paket_bansos pb ON t.id_paket = pb.id_paket
-    WHERE t.id_warga = ?
-    ORDER BY t.id_transaksi DESC
-  `;
-
-  db.query(sql, [id_warga], (err, results) => {
-    if (err) return res.status(500).json({ message: "Gagal ambil riwayat", error: err });
-    res.json(results);
-  });
+  }catch(err) {
+    res.status(500).json({message:"Gagal request bansos", error:err});
+  }
 };

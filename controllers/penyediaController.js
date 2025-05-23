@@ -1,11 +1,76 @@
 const db = require('../config/db');
 
-exports.getAllPaket = async (req, res) => {
+exports.getDashboardPenyedia = async (req, res) => {
+  try{
+    const id_penyedia = req.user.id_penyedia; 
+  
+    const sql = `
+      SELECT
+        (SELECT SUM(stok) 
+          FROM paket_bansos
+          WHERE id_penyedia = ?) AS jumlah_stok,
+  
+        (SELECT COUNT(DISTINCT tb.id_transaksi)
+          FROM transaksi_bansos tb
+          JOIN paket_bansos pb ON tb.id_paket = pb.id_paket
+          WHERE pb.id_penyedia = ?) AS telah_terdistribusi;
+      `;
+    const [results] = await db.promise().query(sql, [id_penyedia, id_penyedia]);
+    const row = results[0];
+    
+      res.json({
+        jumlah_stok: row.jumlah_stok || 0,
+        telah_terdistribusi: row.telah_terdistribusi || 0,
+      });
+  }catch(err){
+    res.status(500).json({message:"Gagal ambil data dashboard", error:err});
+  }
+};
+
+exports.getTransaksiBansos = async(req, res) => {
+  try{
+    const id_penyedia = req.user.id_penyedia;
+  
+    const sql = `
+      SELECT tb.id_transaksi, tb.id_penerima, tb.id_paket, tb.last_pengambilan, tb.next_pengambilan
+      FROM transaksi_bansos tb
+      JOIN paket_bansos pb ON tb.id_paket = pb.id_paket
+      WHERE pb.id_penyedia = ?
+      ORDER BY id_transaksi DESC
+    `;
+    const [results] = await db.promise().query(sql, [id_penyedia]);
+
+    res.json(results);    
+  }catch(err){
+    res.status(500).json({message:"Gagal ambil riwayat", error:err});
+  }
+};
+
+exports.getDatabaseBansos = async(req, res) => {
+  try{
+    const id_penyedia = req.user.id_penyedia;
+  
+    const sql = `
+      SELECT id_paket, nama_paket, stok, terakhir_diperbarui 
+      FROM paket_bansos
+      WHERE id_penyedia = ?
+      ORDER BY id_paket ASC
+    `;
+    const [results] = await db.promise().query(sql, [id_penyedia]);
+
+    res.json(results);    
+  }catch(err){
+    res.status(500).json({message:"Gagal ambil daftar paket", error:err});
+  }
+};
+
+exports.hapusPaket = async (req, res) => {
+  const { id_paket } = req.params;
   try {
-    const [paket] = await db.query('SELECT * FROM paket_bansos');
-    res.json(paket);
+    await db.query('DELETE FROM paket_bansos WHERE id_paket = ?', [id_paket]);
+    res.json({ message: 'Paket berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data paket', error });
+    res.status(500).json({ message: 'Gagal menghapus paket', error });
   }
 };
 
@@ -31,96 +96,4 @@ exports.updatePaket = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Gagal memperbarui paket', error });
   }
-};
-
-exports.hapusPaket = async (req, res) => {
-  const { id_paket } = req.params;
-  try {
-    await db.query('DELETE FROM paket_bansos WHERE id_paket = ?', [id_paket]);
-    res.json({ message: 'Paket berhasil dihapus' });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal menghapus paket', error });
-  }
-};
-
-
-//riwayat
-
-// Ambil daftar semua paket bansos
-exports.getDaftarPaket = (req, res) => {
-  const sql = `
-    SELECT * FROM paket_bansos
-  `;
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: "Gagal ambil paket", error: err });
-    res.json(results);
-  });
-};
-
-// Tambah paket baru
-exports.tambahPaket = (req, res) => {
-  const { nama_paket, stok, max_penghasilan } = req.body;
-
-  const sql = `
-    INSERT INTO paket_bansos (nama_paket, stok, max_penghasilan)
-    VALUES (?, ?, ?)
-  `;
-  db.query(sql, [nama_paket, stok, max_penghasilan], (err, result) => {
-    if (err) return res.status(500).json({ message: "Gagal tambah paket", error: err });
-    res.status(201).json({ message: "Paket bansos ditambahkan" });
-  });
-};
-
-// Edit paket
-exports.editPaket = (req, res) => {
-  const { id_paket } = req.params;
-  const { nama_paket, stok, max_penghasilan } = req.body;
-
-  const sql = `
-    UPDATE paket_bansos SET nama_paket = ?, stok = ?, max_penghasilan = ?
-    WHERE id_paket = ?
-  `;
-  db.query(sql, [nama_paket, stok, max_penghasilan, id_paket], (err) => {
-    if (err) return res.status(500).json({ message: "Gagal update paket", error: err });
-    res.json({ message: "Paket bansos diperbarui" });
-  });
-};
-
-// Hapus paket
-exports.hapusPaket = (req, res) => {
-  const { id_paket } = req.params;
-  const sql = `DELETE FROM paket_bansos WHERE id_paket = ?`;
-  db.query(sql, [id_paket], (err) => {
-    if (err) return res.status(500).json({ message: "Gagal hapus paket", error: err });
-    res.json({ message: "Paket bansos dihapus" });
-  });
-};
-
-// Ambil transaksi yang statusnya pending
-exports.getPendingTransaksi = (req, res) => {
-  const sql = `
-    SELECT t.*, w.nama_lengkap, pb.nama_paket
-    FROM transaksi_bansos t
-    JOIN warga w ON t.id_warga = w.id_warga
-    JOIN paket_bansos pb ON t.id_paket = pb.id_paket
-    WHERE t.status = 'pending'
-  `;
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: "Gagal ambil data transaksi", error: err });
-    res.json(results);
-  });
-};
-
-// Konfirmasi distribusi bansos
-exports.konfirmasiTransaksi = (req, res) => {
-  const { id_transaksi } = req.params;
-
-  const sql = `
-    UPDATE transaksi_bansos SET status = 'diterima'
-    WHERE id_transaksi = ?
-  `;
-  db.query(sql, [id_transaksi], (err) => {
-    if (err) return res.status(500).json({ message: "Gagal konfirmasi", error: err });
-    res.json({ message: "Transaksi dikonfirmasi" });
-  });
 };
