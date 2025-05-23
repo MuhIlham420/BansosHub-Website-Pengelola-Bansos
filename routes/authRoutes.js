@@ -9,9 +9,4 @@ router.post('/register/penerima', authController.registerPenerima);
 // login
 router.post('/login', authController.login);
 
-router.post('/register/penerima', (req, res) => {
-  console.log('✅ Route /register/penerima kena');
-  res.send('Berhasil');
-});
-
 module.exports = router;
