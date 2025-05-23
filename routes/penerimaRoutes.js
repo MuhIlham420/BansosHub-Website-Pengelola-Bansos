@@ -11,4 +11,4 @@ router.get('/daftar', controller.getDaftarBansos);
 
 router.post('/request', controller.requestBansos);
 
-module.exports = router;-
+module.exports = router;
