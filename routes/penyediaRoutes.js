@@ -9,8 +9,8 @@ router.get('/dashboard', controller.getDashboardPenyedia);
 router.get('/daftar', controller.getDatabaseBansos);
 router.get('/riwayat', controller.getTransaksiBansos);
 
-// router.post('/add', verifyToken, penyediaOnly, controller.addPaket);
-// router.post('/edit', verifyToken, penyediaOnly, controller.editPaket);
-// router.post('/delete', verifyToken, penyediaOnly, controller.deletePaket);
+router.post('/add', controller.addPaket);
+router.put('/edit/:id_paket', controller.editPaket);
+router.delete('/delete/:id_paket', controller.deletePaket);
 
 module.exports = router;
