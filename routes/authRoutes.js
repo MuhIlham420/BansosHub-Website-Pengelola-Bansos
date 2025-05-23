@@ -7,8 +7,7 @@ router.post('/register/penyedia', authController.registerPenyedia);
 router.post('/register/penerima', authController.registerPenerima);
 
 // login
-router.post('/login/penerima', authController.loginPenerima);
-router.post('/login/penyedia', authController.loginPenyedia);
+router.post('/login', authController.login);
 
 router.post('/register/penerima', (req, res) => {
   console.log('✅ Route /register/penerima kena');
