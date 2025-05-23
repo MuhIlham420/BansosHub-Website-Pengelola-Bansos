@@ -25,7 +25,7 @@ exports.getDashboardPenerima = async (req, res) => {
   
       const hariIni = new Date();
       const selisihWaktu = tanggal.getTime() - hariIni.getTime();
-      sisa_hari = Math.ceil(selisihWaktu / (1000 * 3600 * 24));
+      sisa_hari = Math.ceil(selisihWaktu / (1000 * 3600 * 24)); 
     }
 
     res.json({
@@ -88,7 +88,6 @@ exports.requestBansos = async(req, res) => {
       VALUES (?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY))
     `;
     const[result] = await db.promise().query(sql, [id_penerima, id_paket]);
-    res.json(result);
 
     res.status(201).json({ message: "Berhasil request bansos" });
   }catch(err) {
