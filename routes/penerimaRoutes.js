@@ -9,6 +9,6 @@ router.get('/dashboard', controller.getDashboardPenerima);
 router.get('/riwayat', controller.getRiwayatBansos);
 router.get('/daftar', controller.getDaftarBansos);
 
-router.post('/request', verifyToken, penerimaOnly, controller.requestBansos);
+router.post('/request', controller.requestBansos);
 
-module.exports = router;
+module.exports = router;-
