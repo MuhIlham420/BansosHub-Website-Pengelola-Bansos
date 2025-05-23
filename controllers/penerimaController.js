@@ -6,7 +6,8 @@ exports.getDashboardPenerima = async (req, res) => {
   
     const sql = `
       SELECT
-        (SELECT COUNT(DISTINCT id_paket) FROM paket_bansos) AS tipe_bansos_tersedia,
+        (SELECT COUNT(DISTINCT id_paket) FROM paket_bansos
+        WHERE is_deleted = 0) AS tipe_bansos_tersedia,
         
         (SELECT next_pengambilan FROM transaksi_bansos 
           WHERE id_penerima = ? 
@@ -24,7 +25,7 @@ exports.getDashboardPenerima = async (req, res) => {
   
       const hariIni = new Date();
       const selisihWaktu = tanggal.getTime() - hariIni.getTime();
-      sisa_hari = Math.ceil(selisihWaktu / (1000 * 3600 * 24)); // konversi ms ke hari
+      sisa_hari = Math.ceil(selisihWaktu / (1000 * 3600 * 24));
     }
 
     res.json({
@@ -42,6 +43,7 @@ exports.getDaftarBansos = async (req, res) => {
     const sql = `
       SELECT id_paket, nama_paket, max_penghasilan, stok, deskripsi 
       FROM paket_bansos
+      WHERE is_deleted = 0
       ORDER BY nama_paket ASC
     `;
 
@@ -61,7 +63,7 @@ exports.getRiwayatBansos = async(req, res) => {
       SELECT t.id_transaksi, t.id_paket, pb.nama_paket, t.last_pengambilan, t.next_pengambilan
       FROM transaksi_bansos t
       JOIN paket_bansos pb ON t.id_paket = pb.id_paket
-      WHERE t.id_penerima = ?
+      WHERE t.id_penerima = ? AND pb.is_deleted = 0
       ORDER BY t.id_transaksi DESC
     `;
     const[result] = await db.promise().query(sql, [id_penerima]);
